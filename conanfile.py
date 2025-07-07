@@ -1,6 +1,6 @@
 from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
-from conan.tools.files import collect_libs
+from conan.tools.files import collect_libs, copy
 from conan.tools.build import check_min_cppstd
 
 
@@ -13,10 +13,18 @@ class AtomtexSpeFileRecipe(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     languages = "C++"
 
-    exports_sources = "src/" "CMakeLists.txt"
-
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": True, "fPIC": True}
+
+    build_tests = True
+
+    def export_sources(self):
+        self.build_tests = False
+        copy(self, "src/*", self.recipe_folder, self.export_sources_folder)
+
+    def requirements(self):
+        if self.build_tests:
+            self.requires("gtest/1.16.0")
 
     def validate(self):
         check_min_cppstd(self, 23)
@@ -30,7 +38,7 @@ class AtomtexSpeFileRecipe(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.configure()
+        cmake.configure({"BUILD_TESTS": self.build_tests})
         cmake.build()
 
     def package(self):

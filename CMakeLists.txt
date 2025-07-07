@@ -8,5 +8,6 @@ option(BUILD_TESTS ON "Build project tests")
 add_subdirectory(${PROJECT_SOURCE_DIR}/atomtex_spe_file)
 
 if (BUILD_TESTS)
+    enable_testing()
     add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 endif ()

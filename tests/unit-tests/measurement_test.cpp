@@ -30,8 +30,8 @@ TEST(LongitudeTest, NaN)
 
 TEST(LatitudeTest, ConstructorWorks)
 {
-    Latitude lon{10};
-    EXPECT_FLOAT_EQ(lon.DecimalDegrees(), double{10});
+    Latitude lat{10};
+    EXPECT_FLOAT_EQ(lat.DecimalDegrees(), double{10});
 }
 
 TEST(LatitudeTest, TooLargeDD)
@@ -47,4 +47,20 @@ TEST(LatitudeTest, TooSmallDD)
 TEST(LatitudeTest, NaN)
 {
     EXPECT_THROW(Latitude{NAN}, std::exception);
+}
+
+TEST(DoseRateTest, ConstructorWorks)
+{
+    DoseRate doseRate{10};
+    EXPECT_FLOAT_EQ(doseRate.MicroSvPerHour(), double{10});
+}
+
+TEST(DoseRateTest, TooSmallMicroSvPerHour)
+{
+    EXPECT_THROW(DoseRate{-0.0001}, std::exception);
+}
+
+TEST(DoseRateTest, NaN)
+{
+    EXPECT_THROW(DoseRate{NAN}, std::exception);
 }

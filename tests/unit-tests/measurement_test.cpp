@@ -27,3 +27,24 @@ TEST(LongitudeTest, NaN)
 {
     EXPECT_THROW(Longitude{NAN}, std::exception);
 }
+
+TEST(LatitudeTest, ConstructorWorks)
+{
+    Latitude lon{10};
+    EXPECT_FLOAT_EQ(lon.DecimalDegrees(), double{10});
+}
+
+TEST(LatitudeTest, TooLargeDD)
+{
+    EXPECT_THROW(Latitude{90.0001}, std::exception);
+}
+
+TEST(LatitudeTest, TooSmallDD)
+{
+    EXPECT_THROW(Latitude{-90.0001}, std::exception);
+}
+
+TEST(LatitudeTest, NaN)
+{
+    EXPECT_THROW(Latitude{NAN}, std::exception);
+}

@@ -7,12 +7,11 @@ set(ATOMTEX_SPE_FILE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/atomtex_spe_file/include)
 
 function(add_unit_test TEST_NAME)
     add_executable(${TEST_NAME} ${ARGN})
-    gtest_discover_tests(${TEST_NAME})
+    gtest_discover_tests(${TEST_NAME} TEST_PREFIX "unit-test.")
     target_include_directories(${TEST_NAME} PRIVATE ${ATOMTEX_SPE_FILE_INCLUDE_DIR})
     target_link_libraries(${TEST_NAME} PRIVATE GTest::gtest_main GTest::gmock_main)
     target_compile_options(${TEST_NAME} PRIVATE -fsanitize=address,undefined)
     target_link_options(${TEST_NAME} PRIVATE -fsanitize=address,undefined)
-    add_test(unit-test.${TEST_NAME} ${TEST_NAME})
     add_dependencies(unit-tests ${TEST_NAME})
 endfunction()
 

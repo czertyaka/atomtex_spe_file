@@ -1,0 +1,127 @@
+#include <string>
+#include <exception>
+
+#include <gtest/gtest.h>
+
+#include "lines.hpp"
+
+using namespace atomtex_spe_file;
+
+TEST(LinesTest, ThrowsOnEmptyRange)
+{
+    const std::string s{"hello"};
+    EXPECT_THROW(Lines<decltype(s)::const_iterator>(s.cbegin(), s.cbegin()),
+        std::exception);
+}
+
+TEST(LinesTest, GetOnlyLine)
+{
+    const std::string s{"hello"};
+    static_assert(StringForwardIterator<decltype(s)::const_iterator>);
+    static_assert(!StringReverseIterator<decltype(s)::const_iterator>);
+    Lines<decltype(s)::const_iterator> lines{s.cbegin(), s.cend()};
+    const auto line = lines[0];
+    EXPECT_TRUE(line);
+    EXPECT_EQ(*line, "hello");
+}
+
+TEST(LinesTest, GetNonexistentLine)
+{
+    const std::string s{"hello"};
+    Lines<decltype(s)::const_iterator> lines{s.cbegin(), s.cend()};
+    const auto line = lines[1];
+    EXPECT_FALSE(line);
+}
+
+TEST(LinesTest, GetFirstLine)
+{
+    const std::string s{"hello\n"
+                        "world"};
+    Lines<decltype(s)::const_iterator> lines{s.cbegin(), s.cend()};
+    const auto line = lines[0];
+    EXPECT_TRUE(line);
+    EXPECT_EQ(*line, "hello");
+}
+
+TEST(LinesTest, GetSecondLine)
+{
+    const std::string s{"hello\n"
+                        "world"};
+    Lines<decltype(s)::const_iterator> lines{s.cbegin(), s.cend()};
+    const auto line = lines[1];
+    EXPECT_TRUE(line);
+    EXPECT_EQ(*line, "world");
+}
+
+TEST(LinesTest, GetFifthLine)
+{
+    const std::string s{"hello\n"
+                        "world\n"
+                        "!\n"
+                        "I\n"
+                        "am\n"
+                        "test\n"
+                        "LinesTest\n"
+                        "GetFifthLine\n"};
+    Lines<decltype(s)::const_iterator> lines{s.cbegin(), s.cend()};
+    const auto line = lines[4];
+    EXPECT_TRUE(line);
+    EXPECT_EQ(*line, "am");
+}
+
+TEST(LinesTest, GetLastLines)
+{
+    const std::string s{"hello\n"
+                        "world"};
+    Lines<decltype(s)::const_reverse_iterator> lines{s.rbegin(), s.rend()};
+    {
+        const auto line = lines[0];
+        EXPECT_TRUE(line);
+        EXPECT_EQ(*line, "world");
+    }
+    {
+        const auto line = lines[1];
+        EXPECT_TRUE(line);
+        EXPECT_EQ(*line, "hello");
+    }
+}
+
+TEST(LinesTest, ReverseGetTwoLines)
+{
+    const std::string s{"hello\n"
+                        "world\n"
+                        "!\n"
+                        "I\n"
+                        "am\n"
+                        "test\n"
+                        "LinesTest\n"
+                        "GetFifthLine"};
+    Lines<decltype(s)::const_reverse_iterator> lines{s.rbegin(), s.rend()};
+    {
+        const auto line = lines[1];
+        EXPECT_TRUE(line);
+        EXPECT_EQ(*line, "LinesTest");
+    }
+    {
+        const auto line = lines[3];
+        EXPECT_TRUE(line);
+        EXPECT_EQ(*line, "am");
+    }
+}
+
+TEST(LinesTest, ReverseTralingNewline)
+{
+    const std::string s{"hello\n"
+                        "world\n"};
+    Lines<decltype(s)::const_reverse_iterator> lines{s.rbegin(), s.rend()};
+    {
+        const auto line = lines[0];
+        EXPECT_TRUE(line);
+        EXPECT_EQ(*line, "");
+    }
+    {
+        const auto line = lines[1];
+        EXPECT_TRUE(line);
+        EXPECT_EQ(*line, "world");
+    }
+}

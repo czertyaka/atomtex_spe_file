@@ -6,7 +6,6 @@
 #include <stdexcept>
 #include <iterator>
 #include <cstddef>
-#include <span>
 
 #include "atomtex_spe_file/spe_file.hpp"
 
@@ -20,16 +19,6 @@ constexpr std::size_t DOSE_RATE_LINE{3105};
 constexpr std::size_t LONGITUDE_LINE{3123};
 constexpr std::size_t LATITUDE_LINE{3124};
 constexpr std::size_t TOTAL_LINES{3130};
-
-template<class Iterator>
-    requires(std::bidirectional_iterator<Iterator>)
-class Lines
-{
-public:
-    Lines(Iterator& iter, std::span<std::size_t> numbers);
-
-private:
-};
 
 } // namespace
 

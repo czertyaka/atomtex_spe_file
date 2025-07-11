@@ -49,12 +49,18 @@ private:
     const CIterator begin_;
     const CIterator end_;
     const Char separator_;
+
+    struct Cache
+    {
+        std::size_t number;
+        CIterator it;
+    } mutable cache_;
 };
 
 template<class Iterator>
     requires StringForwardIterator<Iterator> || StringReverseIterator<Iterator>
 Lines<Iterator>::Lines(CIterator begin, CIterator end, const Char separator)
-    : begin_(begin), end_(end), separator_(separator)
+    : begin_(begin), end_(end), separator_(separator), cache_({0, begin})
 {
     if (begin_ == end_)
     {
@@ -67,7 +73,8 @@ template<class Iterator>
 Lines<Iterator>::Line Lines<Iterator>::operator[](
     const std::size_t number) const
 {
-    CIterator it{begin_};
+    CIterator it{number > cache_.number ? begin_ : cache_.it};
+
     for (std::size_t i{0}; i < number; ++i)
     {
         it = std::ranges::find(it, end_, separator_);
@@ -78,6 +85,8 @@ Lines<Iterator>::Line Lines<Iterator>::operator[](
     }
 
     CIterator next = std::find(it, end_, separator_);
+
+    cache_ = {number, it};
 
     if constexpr (StringReverseIterator<Iterator>)
     {

@@ -6,8 +6,13 @@
 #include <stdexcept>
 #include <iterator>
 #include <cstddef>
+#include <format>
+#include <string_view>
+#include <filesystem>
+#include <fstream>
 
 #include "atomtex_spe_file/spe_file.hpp"
+#include "lines.hpp"
 
 namespace atomtex_spe_file
 {
@@ -22,27 +27,61 @@ constexpr std::size_t TOTAL_LINES{3130};
 
 } // namespace
 
-SpeFile::SpeFile(std::istream& input)
+SpeFile::SpeFile(std::istream& input, std::string_view path) : path_(path)
 {
-    if (!input)
+    Create(input);
+}
+
+SpeFile::SpeFile(const std::filesystem::path& path) : path_(path)
+{
+    if (!std::filesystem::is_regular_file(path))
     {
-        constexpr auto error{"Bad input stream"};
+        const auto error{std::format("{} is not a file", path_)};
         throw std::invalid_argument(error);
     }
 
-    content_.assign({std::istreambuf_iterator<char>(input), {}});
+    std::ifstream ifs{path};
+    Create(ifs);
 }
 
 Measurement SpeFile::ReadMeasurement() const
 {
     if (content_.empty())
     {
-        constexpr auto error{"Empty input"};
+        const auto error{std::format("{} is empty", path_)};
         throw std::invalid_argument(error);
     }
 
-    // TODO
-    return Measurement{{Latitude{0}, Longitude{0}}, DoseRate{0}};
+    using Iterator = decltype(content_)::const_reverse_iterator;
+    Lines<Iterator> lines{content_.crbegin(), content_.crend()};
+
+    auto readLine = [&lines, this](const std::size_t number)
+    {
+        const std::size_t offset = TOTAL_LINES - number;
+        const auto line = lines[number];
+        if (!line)
+        {
+            const auto error{std::format("SPE file {} does not have {} line",
+                path_, number)};
+            throw std::runtime_error(error);
+        }
+        return *line;
+    };
+
+    return Measurement{Latitude{readLine(LATITUDE_LINE)},
+        Longitude{readLine(LONGITUDE_LINE)},
+        DoseRate{readLine(DOSE_RATE_LINE)}};
+}
+
+void SpeFile::Create(std::istream& input)
+{
+    if (!input)
+    {
+        const auto error{std::format("Can not open {}", path_)};
+        throw std::invalid_argument(error);
+    }
+
+    content_.assign({std::istreambuf_iterator<char>(input), {}});
 }
 
 } // namespace atomtex_spe_file

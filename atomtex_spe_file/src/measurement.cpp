@@ -23,7 +23,7 @@ public:
     {
         static std::string_view allowed{".0123456789"};
         const auto allSymbolsAllowed =
-            std::ranges::all_of(s.cbegin() + 1, s.end(), [](char c)
+            std::ranges::all_of(s.cbegin() + 1, s.cend(), [](char c)
                 { return allowed.find(c) != std::string_view::npos; });
         if (!allSymbolsAllowed)
         {

@@ -58,7 +58,7 @@ Measurement SpeFile::ReadMeasurement() const
     auto readLine = [&lines, this](const std::size_t number)
     {
         const std::size_t offset = TOTAL_LINES - number;
-        const auto line = lines[number];
+        const auto line = lines[offset];
         if (!line)
         {
             const auto error{std::format("SPE file {} does not have {} line",

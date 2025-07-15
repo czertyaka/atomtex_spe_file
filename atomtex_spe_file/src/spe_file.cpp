@@ -23,7 +23,7 @@ namespace
 constexpr std::size_t DOSE_RATE_LINE{3105};
 constexpr std::size_t LONGITUDE_LINE{3123};
 constexpr std::size_t LATITUDE_LINE{3124};
-constexpr std::size_t TOTAL_LINES{3130};
+constexpr std::size_t TOTAL_LINES{3131};
 
 } // namespace
 

@@ -125,3 +125,13 @@ TEST(LinesTest, ReverseTralingNewline)
         EXPECT_EQ(*line, "world");
     }
 }
+
+TEST(LinesTest, WorksWithUtf16le)
+{
+    const std::u16string s{u"hello\n"
+                           u"world"};
+    Lines<decltype(s)::const_iterator> lines{s.cbegin(), s.cend()};
+    const auto line = lines[1];
+    EXPECT_TRUE(line);
+    EXPECT_EQ(*line, u"world");
+}

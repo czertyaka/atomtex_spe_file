@@ -40,10 +40,10 @@ class Lines
 public:
     using Char = typename Iterator::value_type;
     using CIterator = std::const_iterator<Iterator>;
-    using Line = std::optional<std::string_view>;
+    using Line = std::basic_string_view<Char>;
 
     Lines(CIterator begin, CIterator end, const Char separator = '\n');
-    Line operator[](const std::size_t number) const;
+    std::optional<Line> operator[](const std::size_t number) const;
 
 private:
     const CIterator begin_;
@@ -70,7 +70,7 @@ Lines<Iterator>::Lines(CIterator begin, CIterator end, const Char separator)
 
 template<class Iterator>
     requires StringForwardIterator<Iterator> || StringReverseIterator<Iterator>
-Lines<Iterator>::Line Lines<Iterator>::operator[](
+std::optional<typename Lines<Iterator>::Line> Lines<Iterator>::operator[](
     const std::size_t number) const
 {
     CIterator it{number > cache_.number ? begin_ : cache_.it};
@@ -90,11 +90,11 @@ Lines<Iterator>::Line Lines<Iterator>::operator[](
 
     if constexpr (StringReverseIterator<Iterator>)
     {
-        return std::string_view(next.base(), it.base());
+        return Line(next.base(), it.base());
     }
     else
     {
-        return std::string_view(it.base(), next.base());
+        return Line(it.base(), next.base());
     }
 }
 

@@ -4,16 +4,13 @@
 #include <filesystem>
 #include <stdexcept>
 #include <ios>
-#include <cstdint>
-#include <vector>
-#include <functional>
 
 #include "utf16le_file.hpp"
 
 namespace atomtex_spe_file
 {
 
-Utf16leFile::Utf16leFile(Utf16leFile::InputStream& input, std::string_view path)
+Utf16leFile::Utf16leFile(std::istream& input, std::string_view path)
     : path_(path)
 {
     Read(input);
@@ -27,7 +24,7 @@ Utf16leFile::Utf16leFile(const std::filesystem::path& path) : path_(path)
         throw std::invalid_argument(error);
     }
 
-    std::basic_ifstream<std::uint8_t> ifs{path, std::ios_base::binary};
+    std::ifstream ifs{path, std::ios_base::binary};
     Read(ifs);
 }
 
@@ -36,7 +33,7 @@ std::u16string_view Utf16leFile::Content() const
     return content_;
 }
 
-void Utf16leFile::Read(Utf16leFile::InputStream& input)
+void Utf16leFile::Read(std::istream& input)
 {
     if (!input)
     {
@@ -44,30 +41,38 @@ void Utf16leFile::Read(Utf16leFile::InputStream& input)
         throw std::runtime_error(error);
     }
 
-    std::istreambuf_iterator<std::uint8_t> it{input};
-
-    // check BOM:
+    // check Byte Order Marker (BOM):
     // https://en.wikipedia.org/wiki/UTF-16#Byte-order_encoding_schemes
-    if (*(it++) != 0xFF || *(it++) != 0xFE)
+    std::array<std::byte, 2> _BOM = {};
+    if (!input.read(reinterpret_cast<char*>(&_BOM[0]), sizeof(_BOM)))
+    {
+        const auto error{std::format("File {} does not have BOM", path_)};
+        throw std::runtime_error(error);
+    }
+    else if ((_BOM[0] ^ BOM[0]) != std::byte{} ||
+             (_BOM[1] ^ BOM[1]) != std::byte{})
     {
         const auto error{
-            std::format("File {} misses BOM or does not have one", path_)};
+            std::format("File {} has wrong byte order marker", path_)};
         throw std::runtime_error(error);
     }
 
-    std::vector<std::uint8_t> buffer(it, {});
-    if (buffer.size() % 2 != 0)
+    const auto pos{input.tellg()};
+    input.seekg(0, std::ios::end);
+    const auto size{input.tellg() - pos};
+    if (size % 2 != 0)
     {
-        const auto error{std::format("File {} is malformed", path_)};
+        const auto error{std::format(
+            "File {} is malformed UTF-16 wise, it has {} bytes", path_, size)};
+        throw std::runtime_error(error);
     }
+    content_.resize(size / 2);
+    input.seekg(pos);
 
-    content_.reserve(buffer.size() / 2);
-    for (std::size_t i{0}; i < buffer.size(); i += 2)
+    if (!input.read(reinterpret_cast<char*>(&content_[0]), size))
     {
-        using CodeUnit = decltype(content_)::value_type;
-        const auto codeUnit{std::bit_or<CodeUnit>{}(CodeUnit{buffer[i]},
-            CodeUnit{buffer[i + 1]} << 8)};
-        content_.push_back(codeUnit);
+        const auto error{std::format("Failed to read file {}", path_)};
+        throw std::runtime_error(error);
     }
 }
 

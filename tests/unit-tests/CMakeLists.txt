@@ -27,3 +27,7 @@ add_unit_test(lines_test
     ${CMAKE_CURRENT_SOURCE_DIR}/lines_test.cpp
 )
 
+add_unit_test(utf16le_file_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/utf16le_file_test.cpp
+    ${ATOMTEX_SPE_FILE_SRC_DIR}/utf16le_file.cpp
+)

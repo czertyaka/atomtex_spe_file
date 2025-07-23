@@ -65,7 +65,7 @@ Measurement SpeFile::Read() const
         if (char16_t{0xFF00} & character)
         {
             const auto error{std::format(
-                "SPE file {} containes invalid ASCII character", name_)};
+                "SPE file {} contains invalid ASCII character", name_)};
             throw std::runtime_error(error);
         }
         return static_cast<char>(character);
@@ -73,15 +73,17 @@ Measurement SpeFile::Read() const
 
     const auto latStr = std::string(std::from_range_t{},
         readLine(LATITUDE_LINE) | std::views::transform(utf16leToASCII));
+    const Latitude lat{latStr};
 
     const auto lonStr = std::string(std::from_range_t{},
         readLine(LONGITUDE_LINE) | std::views::transform(utf16leToASCII));
+    const Longitude lon{lonStr};
 
     const auto doseRateStr = std::string(std::from_range_t{},
         readLine(DOSE_RATE_LINE) | std::views::transform(utf16leToASCII));
+    const DoseRate doseRate{doseRateStr};
 
-    return Measurement{Latitude{latStr}, Longitude{lonStr},
-        DoseRate{doseRateStr}};
+    return Measurement{Point{lat, lon}, doseRate};
 }
 
 } // namespace atomtex_spe_file

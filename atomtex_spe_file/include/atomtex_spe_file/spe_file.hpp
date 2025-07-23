@@ -1,9 +1,8 @@
 #pragma once
 
 #include <string>
-#include <istream>
-#include <filesystem>
 #include <string_view>
+#include <optional>
 
 #include "atomtex_spe_file/measurement.hpp"
 
@@ -13,15 +12,13 @@ namespace atomtex_spe_file
 class SpeFile
 {
 public:
-    SpeFile(std::istream& input, std::string_view path);
-    SpeFile(const std::filesystem::path& path);
-    Measurement ReadMeasurement() const;
+    SpeFile(std::u16string_view content, std::string_view name);
+    Measurement Read() const;
 
 private:
-    void Create(std::istream& input);
-
-    std::string content_;
-    std::string path_;
+    std::u16string_view content_;
+    std::string name_;
+    std::optional<Measurement> measurment_;
 };
 
 } // namespace atomtex_spe_file

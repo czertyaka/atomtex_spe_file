@@ -2,14 +2,11 @@
  * Relying on line numbers is fragile yet fast.
  */
 
-#include <istream>
 #include <stdexcept>
-#include <iterator>
 #include <cstddef>
 #include <format>
 #include <string_view>
-#include <filesystem>
-#include <fstream>
+#include <ranges>
 
 #include "atomtex_spe_file/spe_file.hpp"
 #include "lines.hpp"
@@ -27,34 +24,29 @@ constexpr std::size_t TOTAL_LINES{3131};
 
 } // namespace
 
-SpeFile::SpeFile(std::istream& input, std::string_view path) : path_(path)
+SpeFile::SpeFile(std::u16string_view content, std::string_view name)
+    : content_(content), name_(name)
 {
-    Create(input);
 }
 
-SpeFile::SpeFile(const std::filesystem::path& path) : path_(path)
+Measurement SpeFile::Read() const
 {
-    if (!std::filesystem::is_regular_file(path))
+    if (measurment_)
     {
-        const auto error{std::format("{} is not a file", path_)};
-        throw std::invalid_argument(error);
+        return *measurment_;
     }
 
-    std::ifstream ifs{path};
-    Create(ifs);
-}
-
-Measurement SpeFile::ReadMeasurement() const
-{
     if (content_.empty())
     {
-        const auto error{std::format("{} is empty", path_)};
+        const auto error{std::format("SPE file {} is empty", name_)};
         throw std::invalid_argument(error);
     }
 
     using Iterator = decltype(content_)::const_reverse_iterator;
     Lines<Iterator> lines{content_.crbegin(), content_.crend()};
 
+    // we already know that lines we want are closer to the file end
+    // hence, rv::reverse
     auto readLine = [&lines, this](const std::size_t number)
     {
         const std::size_t offset = TOTAL_LINES - number;
@@ -62,26 +54,34 @@ Measurement SpeFile::ReadMeasurement() const
         if (!line)
         {
             const auto error{std::format("SPE file {} does not have {} line",
-                path_, number)};
+                name_, number)};
             throw std::runtime_error(error);
         }
         return *line;
     };
 
-    return Measurement{Latitude{readLine(LATITUDE_LINE)},
-        Longitude{readLine(LONGITUDE_LINE)},
-        DoseRate{readLine(DOSE_RATE_LINE)}};
-}
-
-void SpeFile::Create(std::istream& input)
-{
-    if (!input)
+    auto utf16leToASCII = [this](auto&& character)
     {
-        const auto error{std::format("Can not open {}", path_)};
-        throw std::invalid_argument(error);
-    }
+        if (char16_t{0xFF00} & character)
+        {
+            const auto error{std::format(
+                "SPE file {} containes invalid ASCII character", name_)};
+            throw std::runtime_error(error);
+        }
+        return static_cast<char>(character);
+    };
 
-    content_.assign({std::istreambuf_iterator<char>(input), {}});
+    const auto latStr = std::string(std::from_range_t{},
+        readLine(LATITUDE_LINE) | std::views::transform(utf16leToASCII));
+
+    const auto lonStr = std::string(std::from_range_t{},
+        readLine(LONGITUDE_LINE) | std::views::transform(utf16leToASCII));
+
+    const auto doseRateStr = std::string(std::from_range_t{},
+        readLine(DOSE_RATE_LINE) | std::views::transform(utf16leToASCII));
+
+    return Measurement{Latitude{latStr}, Longitude{lonStr},
+        DoseRate{doseRateStr}};
 }
 
 } // namespace atomtex_spe_file

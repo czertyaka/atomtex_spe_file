@@ -22,6 +22,9 @@ constexpr std::size_t LONGITUDE_LINE{3123};
 constexpr std::size_t LATITUDE_LINE{3124};
 constexpr std::size_t TOTAL_LINES{3131};
 
+constexpr std::string_view LONGITUDE_PREFIX{"Lon= "};
+constexpr std::string_view LATITUDE_PREFIX{"Lat= "};
+
 } // namespace
 
 SpeFile::SpeFile(std::u16string_view content, std::string_view name)
@@ -47,6 +50,8 @@ Measurement SpeFile::Read() const
     using Iterator = decltype(content_)::const_reverse_iterator;
     Lines<Iterator> lines{content_.crbegin(), content_.crend()};
 
+    // *.spe files UTF-16 LE encoded for **no** reason
+    // if it does contain non-ASCII character it is then malformed
     auto utf16leToASCII = [this](auto&& character)
     {
         if (char16_t{0xFF00} & character)
@@ -60,12 +65,14 @@ Measurement SpeFile::Read() const
 
     const auto latStr = std::string(std::from_range_t{},
         lines[TOTAL_LINES - LATITUDE_LINE] |
-            std::views::transform(utf16leToASCII));
+            std::views::transform(utf16leToASCII) |
+            std::views::drop(LATITUDE_PREFIX.length())); // eat up prefix
     const Latitude lat{latStr};
 
     const auto lonStr = std::string(std::from_range_t{},
         lines[TOTAL_LINES - LONGITUDE_LINE] |
-            std::views::transform(utf16leToASCII));
+            std::views::transform(utf16leToASCII) |
+            std::views::drop(LONGITUDE_PREFIX.length())); // eat up prefix
     const Longitude lon{lonStr};
 
     const auto doseRateStr = std::string(std::from_range_t{},

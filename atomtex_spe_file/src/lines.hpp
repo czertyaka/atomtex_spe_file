@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <optional>
 #include <algorithm>
+#include <format>
 
 namespace atomtex_spe_file
 {
@@ -43,7 +44,7 @@ public:
     using Line = std::basic_string_view<Char>;
 
     Lines(CIterator begin, CIterator end, const Char separator = '\n');
-    std::optional<Line> operator[](const std::size_t number) const;
+    Line operator[](const std::size_t number) const;
 
 private:
     const CIterator begin_;
@@ -70,7 +71,7 @@ Lines<Iterator>::Lines(CIterator begin, CIterator end, const Char separator)
 
 template<class Iterator>
     requires StringForwardIterator<Iterator> || StringReverseIterator<Iterator>
-std::optional<typename Lines<Iterator>::Line> Lines<Iterator>::operator[](
+Lines<Iterator>::Line Lines<Iterator>::operator[](
     const std::size_t number) const
 {
     CIterator it{number > cache_.number ? begin_ : cache_.it};
@@ -80,7 +81,8 @@ std::optional<typename Lines<Iterator>::Line> Lines<Iterator>::operator[](
         it = std::ranges::find(it, end_, separator_);
         if (it++ == end_)
         {
-            return std::nullopt;
+            const auto err{std::format("{} is out of range", number)};
+            throw std::out_of_range(err);
         }
     }
 

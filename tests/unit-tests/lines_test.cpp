@@ -1,5 +1,6 @@
 #include <string>
 #include <exception>
+#include <stdexcept>
 
 #include <gtest/gtest.h>
 
@@ -20,17 +21,14 @@ TEST(LinesTest, GetOnlyLine)
     static_assert(StringForwardIterator<decltype(s)::const_iterator>);
     static_assert(!StringReverseIterator<decltype(s)::const_iterator>);
     Lines<decltype(s)::const_iterator> lines{s.cbegin(), s.cend()};
-    const auto line = lines[0];
-    EXPECT_TRUE(line);
-    EXPECT_EQ(*line, "hello");
+    EXPECT_EQ(lines[0], "hello");
 }
 
 TEST(LinesTest, GetNonexistentLine)
 {
     const std::string s{"hello"};
     Lines<decltype(s)::const_iterator> lines{s.cbegin(), s.cend()};
-    const auto line = lines[1];
-    EXPECT_FALSE(line);
+    EXPECT_THROW(lines[1], std::out_of_range);
 }
 
 TEST(LinesTest, GetFirstLine)
@@ -38,9 +36,7 @@ TEST(LinesTest, GetFirstLine)
     const std::string s{"hello\n"
                         "world"};
     Lines<decltype(s)::const_iterator> lines{s.cbegin(), s.cend()};
-    const auto line = lines[0];
-    EXPECT_TRUE(line);
-    EXPECT_EQ(*line, "hello");
+    EXPECT_EQ(lines[0], "hello");
 }
 
 TEST(LinesTest, GetSecondLine)
@@ -49,8 +45,7 @@ TEST(LinesTest, GetSecondLine)
                         "world"};
     Lines<decltype(s)::const_iterator> lines{s.cbegin(), s.cend()};
     const auto line = lines[1];
-    EXPECT_TRUE(line);
-    EXPECT_EQ(*line, "world");
+    EXPECT_EQ(line, "world");
 }
 
 TEST(LinesTest, GetFifthLine)
@@ -64,9 +59,7 @@ TEST(LinesTest, GetFifthLine)
                         "LinesTest\n"
                         "GetFifthLine\n"};
     Lines<decltype(s)::const_iterator> lines{s.cbegin(), s.cend()};
-    const auto line = lines[4];
-    EXPECT_TRUE(line);
-    EXPECT_EQ(*line, "am");
+    EXPECT_EQ(lines[4], "am");
 }
 
 TEST(LinesTest, GetLastLines)
@@ -74,16 +67,8 @@ TEST(LinesTest, GetLastLines)
     const std::string s{"hello\n"
                         "world"};
     Lines<decltype(s)::const_reverse_iterator> lines{s.rbegin(), s.rend()};
-    {
-        const auto line = lines[0];
-        EXPECT_TRUE(line);
-        EXPECT_EQ(*line, "world");
-    }
-    {
-        const auto line = lines[1];
-        EXPECT_TRUE(line);
-        EXPECT_EQ(*line, "hello");
-    }
+    EXPECT_EQ(lines[0], "world");
+    EXPECT_EQ(lines[1], "hello");
 }
 
 TEST(LinesTest, ReverseGetTwoLines)
@@ -97,16 +82,8 @@ TEST(LinesTest, ReverseGetTwoLines)
                         "LinesTest\n"
                         "GetFifthLine"};
     Lines<decltype(s)::const_reverse_iterator> lines{s.rbegin(), s.rend()};
-    {
-        const auto line = lines[1];
-        EXPECT_TRUE(line);
-        EXPECT_EQ(*line, "LinesTest");
-    }
-    {
-        const auto line = lines[3];
-        EXPECT_TRUE(line);
-        EXPECT_EQ(*line, "am");
-    }
+    EXPECT_EQ(lines[1], "LinesTest");
+    EXPECT_EQ(lines[3], "am");
 }
 
 TEST(LinesTest, ReverseTralingNewline)
@@ -114,16 +91,8 @@ TEST(LinesTest, ReverseTralingNewline)
     const std::string s{"hello\n"
                         "world\n"};
     Lines<decltype(s)::const_reverse_iterator> lines{s.rbegin(), s.rend()};
-    {
-        const auto line = lines[0];
-        EXPECT_TRUE(line);
-        EXPECT_EQ(*line, "");
-    }
-    {
-        const auto line = lines[1];
-        EXPECT_TRUE(line);
-        EXPECT_EQ(*line, "world");
-    }
+    EXPECT_EQ(lines[0], "");
+    EXPECT_EQ(lines[1], "world");
 }
 
 TEST(LinesTest, WorksWithUtf16le)
@@ -131,7 +100,5 @@ TEST(LinesTest, WorksWithUtf16le)
     const std::u16string s{u"hello\n"
                            u"world"};
     Lines<decltype(s)::const_iterator> lines{s.cbegin(), s.cend()};
-    const auto line = lines[1];
-    EXPECT_TRUE(line);
-    EXPECT_EQ(*line, u"world");
+    EXPECT_EQ(lines[1], u"world");
 }

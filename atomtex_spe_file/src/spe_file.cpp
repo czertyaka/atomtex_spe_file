@@ -7,6 +7,7 @@
 #include <format>
 #include <string_view>
 #include <ranges>
+#include <cctype>
 
 #include "atomtex_spe_file/spe_file.hpp"
 #include "lines.hpp"
@@ -63,10 +64,16 @@ Measurement SpeFile::Read() const
         return static_cast<char>(character);
     };
 
+    auto printable = [](const int c) -> bool
+    {
+        return std::isprint(c);
+    };
+
     const auto latStr =
         lines[TOTAL_LINES - LATITUDE_LINE] |
         std::views::transform(utf16leToASCII) |
         std::views::drop(LATITUDE_PREFIX.length()) | // eat up prefix
+        std::views::take_while(printable) |
         std::ranges::to<std::string>();
     const Latitude lat{latStr};
 
@@ -74,11 +81,13 @@ Measurement SpeFile::Read() const
         lines[TOTAL_LINES - LONGITUDE_LINE] |
         std::views::transform(utf16leToASCII) |
         std::views::drop(LONGITUDE_PREFIX.length()) | // eat up prefix
+        std::views::take_while(printable) |
         std::ranges::to<std::string>();
     const Longitude lon{lonStr};
 
     const auto doseRateStr = lines[TOTAL_LINES - DOSE_RATE_LINE] |
                              std::views::transform(utf16leToASCII) |
+                             std::views::take_while(printable) |
                              std::ranges::to<std::string>();
     const DoseRate doseRate{doseRateStr};
 

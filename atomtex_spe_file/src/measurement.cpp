@@ -21,7 +21,7 @@ class FloatFromString
 public:
     FloatFromString(std::string_view s, const F& validate) : value_(NAN)
     {
-        static std::string_view allowed{".0123456789"};
+        static std::string_view allowed{".-+0123456789"};
         const auto allSymbolsAllowed =
             std::ranges::all_of(s.cbegin() + 1, s.cend(), [](char c)
                 { return allowed.find(c) != std::string_view::npos; });

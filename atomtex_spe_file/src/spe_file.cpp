@@ -52,7 +52,7 @@ Measurement SpeFile::Read() const
 
     // *.spe files UTF-16 LE encoded for **no** reason
     // if it does contain non-ASCII character it is then malformed
-    auto utf16leToASCII = [this](auto&& character)
+    auto utf16leToASCII = [this](auto&& character) -> char
     {
         if (char16_t{0xFF00} & character)
         {
@@ -63,21 +63,23 @@ Measurement SpeFile::Read() const
         return static_cast<char>(character);
     };
 
-    const auto latStr = std::string(std::from_range_t{},
+    const auto latStr =
         lines[TOTAL_LINES - LATITUDE_LINE] |
-            std::views::transform(utf16leToASCII) |
-            std::views::drop(LATITUDE_PREFIX.length())); // eat up prefix
+        std::views::transform(utf16leToASCII) |
+        std::views::drop(LATITUDE_PREFIX.length()) | // eat up prefix
+        std::ranges::to<std::string>();
     const Latitude lat{latStr};
 
-    const auto lonStr = std::string(std::from_range_t{},
+    const auto lonStr =
         lines[TOTAL_LINES - LONGITUDE_LINE] |
-            std::views::transform(utf16leToASCII) |
-            std::views::drop(LONGITUDE_PREFIX.length())); // eat up prefix
+        std::views::transform(utf16leToASCII) |
+        std::views::drop(LONGITUDE_PREFIX.length()) | // eat up prefix
+        std::ranges::to<std::string>();
     const Longitude lon{lonStr};
 
-    const auto doseRateStr = std::string(std::from_range_t{},
-        lines[TOTAL_LINES - DOSE_RATE_LINE] |
-            std::views::transform(utf16leToASCII));
+    const auto doseRateStr = lines[TOTAL_LINES - DOSE_RATE_LINE] |
+                             std::views::transform(utf16leToASCII) |
+                             std::ranges::to<std::string>();
     const DoseRate doseRate{doseRateStr};
 
     return Measurement{Point{lat, lon}, doseRate};

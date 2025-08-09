@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <ios>
 
-#include "utf16le_file.hpp"
+#include "atomtex_spe_file/utf16le_file.hpp"
 
 namespace atomtex_spe_file
 {

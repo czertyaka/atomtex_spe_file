@@ -15,4 +15,4 @@ jobs:
         uses: conan-io/setup-conan@v1
 
       - name: Build
-        run: conan build --build=missing -s compiler.cppstd=23
+        run: conan build --build=missing -s compiler.cppstd=23 .

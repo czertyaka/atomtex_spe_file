@@ -13,6 +13,8 @@ jobs:
 
       - name: Install Conan
         uses: conan-io/setup-conan@v1
+        with:
+          cache_packages: true
 
       - name: Build
         run: conan build --build=missing -s compiler.cppstd=23 .

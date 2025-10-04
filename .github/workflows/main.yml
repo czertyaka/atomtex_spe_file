@@ -21,7 +21,7 @@ jobs:
     - name: Compile
       run: |
         nix-shell --pure --run "conan profile detect"
-        nix-shell --pure --run "conan build . --build=missing -s compiler.cppstd=gnu23 -s compiler.libcxx=libstdc++11"
+        nix-shell --pure --run "conan build . --build=missing -s compiler.cppstd=gnu23"
 
     - name: Test
       run: |

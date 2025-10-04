@@ -40,6 +40,13 @@ class AtomtexSpeFileRecipe(ConanFile):
         tc.generate()
 
     def layout(self):
+        folder_vars = [
+            "settings.build_type",
+            "settings.os",
+            "settings.compiler",
+            "options.shared",
+        ]
+        self.folders.build_folder_vars = folder_vars
         cmake_layout(self)
 
     def build(self):

@@ -1,20 +1,28 @@
 name: Build and test
+
 on:
+  workflow_call: {}
   push:
-    branches:
-      - master
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v3
 
-      - name: Install Conan
-        uses: conan-io/setup-conan@v1
-        with:
-          cache_packages: true
+    - uses: cachix/install-nix-action@v31
+      with:
+        nix_path: nixpkgs=channel:nixos-25.05
 
-      - name: Build
-        run: conan build --build=missing -s compiler.cppstd=23 .
+    - name: Compile
+      run: |
+        nix-shell --pure --run "conan profile detect"
+        nix-shell --pure --run "conan build . --build=missing -s compiler.cppstd=gnu23"
+
+    - name: Test
+      run: |
+        nix-shell --pure --run "ctest --test-dir build/Release/"

@@ -9,6 +9,11 @@ if (MSVC)
     add_compile_options(/W4)
 else ()
     add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+    # this is to suppress
+    # clang++: warning: argument unused during compilation: '-stdlib=libstdc++' [-Wunused-command-line-argument]
+    # in Nix environment
+    # https://github.com/conan-io/conan/issues/19006
+    add_compile_options(-Wno-unused-command-line-argument)
 endif ()
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/atomtex_spe_file)

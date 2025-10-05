@@ -8,7 +8,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  main:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,11 +18,24 @@ jobs:
       with:
         nix_path: nixpkgs=channel:nixos-25.05
 
-    - name: Compile
+    - uses: nicknovitski/nix-develop@v1
+      with:
+        arguments: .#native
+
+    - name: Compile for Linux
       run: |
-        nix-shell --pure --run "conan profile detect"
-        nix-shell --pure --run "conan build . --build=missing -s compiler.cppstd=gnu23"
+        conan profile detect --name default-native
+        conan build --build=missing -pr:b default-native -pr:h conan/profiles/native .
 
     - name: Test
       run: |
-        nix-shell --pure --run "ctest --test-dir build/Release/"
+        ctest --test-dir build/release-linux-clang-shared/
+
+    - uses: nicknovitski/nix-develop@v1
+      with:
+        arguments: .#mingw64
+
+    - name: Compile for Windows
+      run: |
+        conan profile detect --name default-mingw64
+        conan build --build=missing -pr:b default-mingw64 -pr:h conan/profiles/mingw64 .

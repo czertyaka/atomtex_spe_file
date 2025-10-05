@@ -1,0 +1,18 @@
+[settings]
+os=Windows
+arch=x86_64
+compiler=gcc
+compiler.version=14
+compiler.libcxx=libstdc++11
+compiler.cppstd=gnu23
+build_type=Release
+
+[buildenv]
+CC=x86_64-w64-mingw32-gcc
+CXX=x86_64-w64-mingw32-g++
+RC=x86_64-w64-mingw32-windres
+AR=x86_64-w64-mingw32-ar
+RANLIB=x86_64-w64-mingw32-ranlib
+CFLAGS=-static -static-libgcc -static-libstdc++
+CXXFLAGS=-static -static-libgcc -static-libstdc++
+LDFLAGS=-static -static-libgcc -static-libstdc++

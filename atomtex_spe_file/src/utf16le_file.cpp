@@ -16,7 +16,7 @@ Utf16leFile::Utf16leFile(std::istream& input, std::string_view path)
     Read(input);
 }
 
-Utf16leFile::Utf16leFile(const std::filesystem::path& path) : path_(path)
+Utf16leFile::Utf16leFile(const std::filesystem::path& path) : path_(path.string())
 {
     if (!std::filesystem::is_regular_file(path))
     {

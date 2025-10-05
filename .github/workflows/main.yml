@@ -35,7 +35,7 @@ jobs:
       with:
         arguments: .#mingw64
 
-    - name: Compile for Linux
+    - name: Compile for Windows
       run: |
         conan profile detect --name default-mingw64
         conan build --build=missing -pr:b default-mingw64 -pr:h conan/profiles/mingw64 .

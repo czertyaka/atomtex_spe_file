@@ -22,7 +22,7 @@ jobs:
       with:
         arguments: .#native
 
-    - name: Compile
+    - name: Compile for Linux
       run: |
         conan profile detect --name default-native
         conan build --build=missing -pr:b default-native -pr:h conan/profiles/native .
@@ -30,3 +30,12 @@ jobs:
     - name: Test
       run: |
         ctest --test-dir build/release-linux-clang-shared/
+
+    - uses: nicknovitski/nix-develop@v1
+      with:
+        arguments: .#mingw64
+
+    - name: Compile for Linux
+      run: |
+        conan profile detect --name default-mingw64
+        conan build --build=missing -pr:b default-mingw64 -pr:h conan/profiles/mingw64 .

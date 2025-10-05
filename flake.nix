@@ -27,6 +27,7 @@
             export CONAN_HOME="$PWD/.conan2"
           '';
         };
+        default = self.devShells.x86_64-linux.native;
 
         # shell for Windows cross-compilation
         mingw64 = pkgs.mkShellNoCC {

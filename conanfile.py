@@ -17,7 +17,7 @@ class AtomtexSpeFileRecipe(ConanFile):
     default_options = {"shared": True, "fPIC": True}
 
     build_tests = True
-    build_benchmark = True
+    build_benchmark = False
 
     def export_sources(self):
         self.build_tests = False

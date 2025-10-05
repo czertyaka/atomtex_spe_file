@@ -1,7 +1,7 @@
 from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake, cmake_layout
 from conan.tools.files import collect_libs, copy
-from conan.tools.build import check_min_cppstd
+from conan.tools.build import check_min_cppstd, cross_building
 
 
 class AtomtexSpeFileRecipe(ConanFile):
@@ -24,11 +24,16 @@ class AtomtexSpeFileRecipe(ConanFile):
         self.build_benchmark = False
         copy(self, "src/*", self.recipe_folder, self.export_sources_folder)
 
+    def config_options(self):
+        if self.settings.os == "Windows":
+            del self.options.fPIC
+
     def requirements(self):
-        if self.build_tests:
-            self.requires("gtest/1.16.0")
-        if self.build_benchmark:
-            self.requires("benchmark/1.9.4")
+        if not cross_building(self):
+            if self.build_tests:
+                self.requires("gtest/1.16.0")
+            if self.build_benchmark:
+                self.requires("benchmark/1.9.4")
 
     def validate(self):
         check_min_cppstd(self, 23)
@@ -51,8 +56,11 @@ class AtomtexSpeFileRecipe(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.configure({"BUILD_TESTS": self.build_tests})
-        cmake.configure({"BUILD_BENCHMARK": self.build_benchmark})
+        vars = dict()
+        if not cross_building(self):
+            vars["BUILD_TESTS"] = self.build_tests
+            vars["BUILD_BENCHMARK"] = self.build_benchmark
+        cmake.configure(variables=vars)
         cmake.build()
 
     def package(self):

@@ -13,3 +13,6 @@ CXX=x86_64-w64-mingw32-g++
 RC=x86_64-w64-mingw32-windres
 AR=x86_64-w64-mingw32-ar
 RANLIB=x86_64-w64-mingw32-ranlib
+CFLAGS=-static-libgcc -static-libstdc++
+CXXFLAGS=-static-libgcc -static-libstdc++
+LDFLAGS=-static-libgcc -static-libstdc++

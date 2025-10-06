@@ -17,6 +17,7 @@ else ()
 endif ()
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/atomtex_spe_file)
+add_subdirectory(${PROJECT_SOURCE_DIR}/atomtex_spe_file_cli)
 
 if (BUILD_TESTS)
     enable_testing()

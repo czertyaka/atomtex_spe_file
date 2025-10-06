@@ -29,6 +29,7 @@ class AtomtexSpeFileRecipe(ConanFile):
             del self.options.fPIC
 
     def requirements(self):
+        self.requires("boost/[>=1.85]")
         if not cross_building(self):
             if self.build_tests:
                 self.requires("gtest/1.16.0")
@@ -39,10 +40,10 @@ class AtomtexSpeFileRecipe(ConanFile):
         check_min_cppstd(self, 23)
 
     def generate(self):
-        deps = CMakeDeps(self)
-        deps.generate()
         tc = CMakeToolchain(self)
         tc.generate()
+        deps = CMakeDeps(self)
+        deps.generate()
 
     def layout(self):
         folder_vars = [

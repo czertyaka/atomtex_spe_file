@@ -37,7 +37,7 @@ CommandLineArgs::CommandLineArgs(const int argc, const char* argv[]) :
     desc_.add_options()
         ("help,h", "produce help message")
         ("version,v", "print version string")
-        ("format,f", value<std::string>()->value_name("FORMAT")->default_value("text"), "choose output format (text, json)")
+        ("format,f", value<std::string>()->value_name("FORMAT")->default_value("text"), "choose output format (text, json, csv)")
         ("output,o", value<std::string>()->value_name("PATH"), "path to output file")
         ("input,i", value<std::string>()->value_name("PATH"), "input file or directory")
     ;

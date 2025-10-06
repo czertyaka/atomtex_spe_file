@@ -4,15 +4,20 @@
 #include <map>
 #include <filesystem>
 #include <ostream>
+#include <stdexcept>
 #include <string>
+#include <string_view>
+#include <type_traits>
 #include <utility>
 #include <fstream>
+#include <memory>
 
 #include <boost/program_options.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/positional_options.hpp>
 #include <boost/program_options/variables_map.hpp>
 #include <boost/program_options/options_description.hpp>
+#include <boost/json.hpp>
 
 #include <atomtex_spe_file/measurement.hpp>
 #include <atomtex_spe_file/utf16le_file.hpp>
@@ -21,6 +26,8 @@
 namespace asf = atomtex_spe_file;
 
 using Measurements = std::map<std::filesystem::path, asf::Measurement>;
+
+// ===== CommandLineArgs =====
 
 class CommandLineArgs {
     using VariablesMap = boost::program_options::variables_map;
@@ -75,19 +82,102 @@ const CommandLineArgs::OptionsDescription& CommandLineArgs::GetOptionsDescriptio
     return desc_;
 }
 
+// ===== formatting classes =====
+
+class BaseFormat {
+public:
+    BaseFormat(std::ostream& ostream, const Measurements& measurements) :
+        os_(ostream),
+        measurements_(measurements)
+    {}
+    virtual ~BaseFormat() = default;
+    virtual void Print() const = 0;
+protected:
+    std::ostream& os_;
+    const Measurements& measurements_;
+};
+
+class TextFormat : public BaseFormat {
+public:
+    TextFormat(std::ostream& ostream, const Measurements& measurements) :
+        BaseFormat(ostream, measurements)
+    {}
+    void Print() const final {
+        for (const auto& [path, measurement]: measurements_) {
+            os_ << "File: " << path
+                << ", longitude: " << measurement.point.lon.DecimalDegrees() << " (dd)"
+                << ", latitude: " << measurement.point.lat.DecimalDegrees() << " (dd)"
+                << ", dose rate: " << measurement.doseRate.MicroSvPerHour() << " (μSv/hr)"
+                << std::endl;
+        }
+    }
+};
+
+class CsvFormat : public BaseFormat {
+public:
+    CsvFormat(std::ostream& ostream, const Measurements& measurements) :
+        BaseFormat(ostream, measurements)
+    {}
+    void Print() const final {
+        os_ << "\"File\",\"Longitude\",\"Latitude\",\"Dose rate\"" << std::endl;
+        for (const auto& [path, measurement]: measurements_) {
+            os_ << path << ",\""
+                << measurement.point.lon.DecimalDegrees() << "\",\""
+                << measurement.point.lat.DecimalDegrees() << "\",\""
+                << measurement.doseRate.MicroSvPerHour() << "\""
+                << std::endl;
+        }
+    }
+};
+
+class JsonFormat : public BaseFormat {
+public:
+    JsonFormat(std::ostream& ostream, const Measurements& measurements) :
+        BaseFormat(ostream, measurements)
+    {}
+    void Print() const final {
+        namespace bj = boost::json;
+        bj::array root {};
+        for (const auto& [path, measurement]: measurements_) {
+            const bj::value obj = {
+                {"File", path.string()},
+                {"Longitude", measurement.point.lon.DecimalDegrees()},
+                {"Latitude", measurement.point.lat.DecimalDegrees()},
+                {"Dose rate", measurement.doseRate.MicroSvPerHour()}
+            };
+            root.emplace_back(obj);
+        }
+        os_ << root;
+    }
+};
+
+// ===== read functions =====
+
 asf::Measurement read_measurement(const std::filesystem::path path) {
     const asf::Utf16leFile file{path};
     const asf::SpeFile spe{file.Content(), path.string()};
     return spe.Read();
 }
 
-void print_measurements(std::ostream& os, const Measurements& measurements) {
-    for (const auto& [path, measurement]: measurements) {
-        os << "File: " << path
-            << ", longitude: " << measurement.point.lon.DecimalDegrees() << " (dd)"
-            << ", latitude: " << measurement.point.lat.DecimalDegrees() << " (dd)"
-            << ", dose rate: " << measurement.doseRate.MicroSvPerHour() << " (μSv/hr)";
+// ===== print functions =====
+
+void print_measurements(std::ostream& os, std::string_view format, const Measurements& measurements) {
+    std::unique_ptr<BaseFormat> formatter {};
+    if (format == "text") {
+        formatter = std::make_unique<TextFormat>(os, measurements);
     }
+    else if (format == "csv") {
+        formatter = std::make_unique<CsvFormat>(os, measurements);
+    }
+    else if (format == "json") {
+        formatter = std::make_unique<JsonFormat>(os, measurements);
+    }
+    else {
+        return;
+    }
+
+    formatter->Print();
+
 }
 
 int main(const int argc, const char* argv[]) {
@@ -131,6 +221,12 @@ int main(const int argc, const char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    const auto format = vm["format"].as<std::string>();
+    if (format != "text" && format != "json" && format != "csv") {
+        std::cerr << "Error: unknown format " << format << std::endl;
+        return EXIT_FAILURE;
+    }
+    
     if (vm.contains("output")) {
         const std::filesystem::path output {vm["output"].as<std::string>()};
         std::ofstream ofs {output, std::ios::trunc};
@@ -138,10 +234,10 @@ int main(const int argc, const char* argv[]) {
             std::cerr << "Error: can't open file " << output << " for writing" << std::endl;
             return EXIT_FAILURE;
         }
-        print_measurements(ofs, measurements);
+        print_measurements(ofs, format, measurements);
     }
     else {
-        print_measurements(std::cout, measurements);
+        print_measurements(std::cout, format, measurements);
     }
     return EXIT_SUCCESS;
 }

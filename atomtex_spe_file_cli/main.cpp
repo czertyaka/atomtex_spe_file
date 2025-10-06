@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <exception>
 #include <iostream>
 
 #include <boost/program_options.hpp>
@@ -13,6 +14,7 @@ class CommandLineArgs {
     using OptionsDescription = boost::program_options::options_description;
 public:
     CommandLineArgs(const int argc, const char* argv[]);
+    void Notify();
     const VariablesMap& GetVariablesMap() const;
     const OptionsDescription& GetOptionsDescription() const;
 private:
@@ -39,13 +41,16 @@ CommandLineArgs::CommandLineArgs(const int argc, const char* argv[]) :
         ("version,v", "print version string")
         ("format,f", value<std::string>()->value_name("FORMAT")->default_value("text"), "choose output format (text, json, csv)")
         ("output,o", value<std::string>()->value_name("PATH"), "path to output file")
-        ("input,i", value<std::string>()->value_name("PATH"), "input file or directory")
+        ("input,i", value<std::string>()->value_name("PATH")->required(), "input file or directory")
     ;
 
     positional_options_description pdesc {};
-    pdesc.add("input,i", 1);
+    pdesc.add("input", 1);
 
     store(command_line_parser(argc, argv).options(desc_).positional(pdesc).run(), vm_);
+}
+
+void CommandLineArgs::Notify() {
     notify(vm_);
 }
 
@@ -58,7 +63,7 @@ const CommandLineArgs::OptionsDescription& CommandLineArgs::GetOptionsDescriptio
 }
 
 int main(const int argc, const char* argv[]) {
-    const CommandLineArgs args {argc, argv};
+    CommandLineArgs args {argc, argv};
     const auto& vm = args.GetVariablesMap();
     if (vm.contains("help")) {
         std::cout << args.GetOptionsDescription() << std::endl;
@@ -67,5 +72,14 @@ int main(const int argc, const char* argv[]) {
     else if (vm.contains("version")) {
         std::cout << "atomtex_spe_file version "
             << ATOMTEX_SPE_FILE_VERSION << std::endl;
+        return EXIT_SUCCESS;
+    }
+
+    try {
+        args.Notify();
+    }
+    catch (const std::exception& err) {
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
     }
 }

@@ -2,11 +2,12 @@ from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake, cmake_layout
 from conan.tools.files import collect_libs, copy
 from conan.tools.build import check_min_cppstd, cross_building
+from conan.tools.scm import Version
 
 
 class AtomtexSpeFileRecipe(ConanFile):
     name = "atomtex-spe-file"
-    version = "0.1"
+    version = "0.1.0"
     description = "Parse *.spe files from ATOMTEX detector"
 
     package_type = "library"
@@ -56,7 +57,12 @@ class AtomtexSpeFileRecipe(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        vars = dict()
+        version = Version(self.version)
+        vars = {
+            "ATOMTEX_SPE_FILE_VERSION_MAJOR": version.major,
+            "ATOMTEX_SPE_FILE_VERSION_MINOR": version.minor,
+            "ATOMTEX_SPE_FILE_VERSION_PATCH": version.patch,
+        }
         if not cross_building(self):
             vars["BUILD_TESTS"] = self.build_tests
             vars["BUILD_BENCHMARK"] = self.build_benchmark

@@ -4,7 +4,9 @@
 #include <map>
 #include <filesystem>
 #include <ostream>
+#include <string>
 #include <utility>
+#include <fstream>
 
 #include <boost/program_options.hpp>
 #include <boost/program_options/parsers.hpp>
@@ -129,6 +131,17 @@ int main(const int argc, const char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    print_measurements(std::cout, measurements);
+    if (vm.contains("output")) {
+        const std::filesystem::path output {vm["output"].as<std::string>()};
+        std::ofstream ofs {output, std::ios::trunc};
+        if (!ofs || !ofs.good()) {
+            std::cerr << "Error: can't open file " << output << " for writing" << std::endl;
+            return EXIT_FAILURE;
+        }
+        print_measurements(ofs, measurements);
+    }
+    else {
+        print_measurements(std::cout, measurements);
+    }
     return EXIT_SUCCESS;
 }

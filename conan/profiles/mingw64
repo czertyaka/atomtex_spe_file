@@ -19,6 +19,7 @@ LDFLAGS=-static -static-libgcc -static-libstdc++
 
 
 [options]
+atomtex-spe-file/*:shared = False
 boost/*:shared = False
 boost/*:lzma = False
 boost/*:numa = False

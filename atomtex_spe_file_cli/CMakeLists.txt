@@ -6,3 +6,8 @@ target_link_libraries(atomtex_spe_file_cli PRIVATE
   Boost::json
   atomtex_spe_file
 )
+
+set(ATOMTEX_SPE_FILE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/atomtex_spe_file/include)
+target_include_directories(atomtex_spe_file_cli PRIVATE
+  ${ATOMTEX_SPE_FILE_INCLUDE_DIR}
+)

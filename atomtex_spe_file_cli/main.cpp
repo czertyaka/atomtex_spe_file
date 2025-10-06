@@ -1,6 +1,10 @@
 #include <cstdlib>
 #include <exception>
 #include <iostream>
+#include <map>
+#include <filesystem>
+#include <ostream>
+#include <utility>
 
 #include <boost/program_options.hpp>
 #include <boost/program_options/parsers.hpp>
@@ -8,6 +12,13 @@
 #include <boost/program_options/variables_map.hpp>
 #include <boost/program_options/options_description.hpp>
 
+#include <atomtex_spe_file/measurement.hpp>
+#include <atomtex_spe_file/utf16le_file.hpp>
+#include <atomtex_spe_file/spe_file.hpp>
+
+namespace asf = atomtex_spe_file;
+
+using Measurements = std::map<std::filesystem::path, asf::Measurement>;
 
 class CommandLineArgs {
     using VariablesMap = boost::program_options::variables_map;
@@ -62,6 +73,21 @@ const CommandLineArgs::OptionsDescription& CommandLineArgs::GetOptionsDescriptio
     return desc_;
 }
 
+asf::Measurement read_measurement(const std::filesystem::path path) {
+    const asf::Utf16leFile file{path};
+    const asf::SpeFile spe{file.Content(), path.string()};
+    return spe.Read();
+}
+
+void print_measurements(std::ostream& os, const Measurements& measurements) {
+    for (const auto& [path, measurement]: measurements) {
+        os << "File: " << path
+            << ", longitude: " << measurement.point.lon.DecimalDegrees() << " (dd)"
+            << ", latitude: " << measurement.point.lat.DecimalDegrees() << " (dd)"
+            << ", dose rate: " << measurement.doseRate.MicroSvPerHour() << " (μSv/hr)";
+    }
+}
+
 int main(const int argc, const char* argv[]) {
     CommandLineArgs args {argc, argv};
     const auto& vm = args.GetVariablesMap();
@@ -82,4 +108,27 @@ int main(const int argc, const char* argv[]) {
         std::cerr << "Error: " << err.what() << std::endl;
         return EXIT_FAILURE;
     }
+
+    Measurements measurements {};
+
+    const std::filesystem::path input { vm["input"].as<std::string>() };
+    if (std::filesystem::is_regular_file(input)) {
+        try {
+            measurements.insert(std::make_pair(input, read_measurement(input)));
+        }
+        catch (const std::exception& err) {
+            std::cerr << "Error: input must be regular file or directory\n";
+            return EXIT_FAILURE;
+        }
+    }
+    else if (std::filesystem::is_directory(input)) {
+        // @TODO: add recursive search and reading
+    }
+    else {
+        std::cerr << "Error: input must be regular file or directory\n";
+        return EXIT_FAILURE;
+    }
+
+    print_measurements(std::cout, measurements);
+    return EXIT_SUCCESS;
 }

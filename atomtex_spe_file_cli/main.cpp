@@ -64,4 +64,8 @@ int main(const int argc, const char* argv[]) {
         std::cout << args.GetOptionsDescription() << std::endl;
         return EXIT_SUCCESS;
     }
+    else if (vm.contains("version")) {
+        std::cout << "atomtex_spe_file version "
+            << ATOMTEX_SPE_FILE_VERSION << std::endl;
+    }
 }

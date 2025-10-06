@@ -166,6 +166,8 @@ void read_measurements_recursively(const std::filesystem::path path, Measurement
             continue;
         }
 
+        std::cout << "Reading " << entryPath << "..." << std::endl;
+
         try {
             measurements.insert(std::make_pair(entryPath, read_measurement(entryPath)));
         }

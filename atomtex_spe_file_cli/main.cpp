@@ -159,6 +159,23 @@ asf::Measurement read_measurement(const std::filesystem::path path) {
     return spe.Read();
 }
 
+void read_measurements_recursively(const std::filesystem::path path, Measurements& measurements) {
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(path)) {
+        const auto entryPath = entry.path();
+        if (!(std::filesystem::is_regular_file(entryPath) && entryPath.extension() == ".spe")) {
+            continue;
+        }
+
+        try {
+            measurements.insert(std::make_pair(entryPath, read_measurement(entryPath)));
+        }
+        catch (const std::exception& err) {
+            std::cerr << "Warning: failed to read " << entryPath << std::endl;
+            continue;
+        }
+    }
+}
+
 // ===== print functions =====
 
 void print_measurements(std::ostream& os, std::string_view format, const Measurements& measurements) {
@@ -214,7 +231,11 @@ int main(const int argc, const char* argv[]) {
         }
     }
     else if (std::filesystem::is_directory(input)) {
-        // @TODO: add recursive search and reading
+        read_measurements_recursively(input, measurements);
+        if (measurements.size() == 0) {
+            std::cerr << "Error: failed to find any valid *.spe file in " << input << std::endl;
+            return EXIT_FAILURE;
+        }
     }
     else {
         std::cerr << "Error: input must be regular file or directory\n";

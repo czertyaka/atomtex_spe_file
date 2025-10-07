@@ -147,7 +147,7 @@ public:
             };
             root.emplace_back(obj);
         }
-        os_ << root;
+        os_ << root << std::endl;
     }
 };
 

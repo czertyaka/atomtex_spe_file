@@ -199,7 +199,7 @@ void print_measurements(std::ostream& os, std::string_view format, const Measure
 
 }
 
-int run(const int argc, const char* argv[]) {
+int run_or_throw(const int argc, const char* argv[]) {
     CommandLineArgs args {argc, argv};
     const auto& vm = args.GetVariablesMap();
     if (vm.contains("help")) {
@@ -263,6 +263,19 @@ int run(const int argc, const char* argv[]) {
         print_measurements(std::cout, format, measurements);
     }
     return EXIT_SUCCESS;
+}
+
+int run(const int argc, const char* argv[]) {
+    try {
+        return run_or_throw(argc, argv);
+    }
+    catch (const std::exception& err) {
+        std::cerr << err.what() << std::endl;
+    }
+    catch (...) {
+        std::cerr << "unexpected error" << std::endl;
+    }
+    return EXIT_FAILURE;
 }
 
 } // namespace cli

@@ -22,9 +22,10 @@
 #include <atomtex_spe_file/utf16le_file.hpp>
 #include <atomtex_spe_file/spe_file.hpp>
 
-namespace asf = atomtex_spe_file;
+namespace atomtex_spe_file {
+namespace cli {
 
-using Measurements = std::map<std::filesystem::path, asf::Measurement>;
+using Measurements = std::map<std::filesystem::path, Measurement>;
 
 // ===== CommandLineArgs =====
 
@@ -152,9 +153,9 @@ public:
 
 // ===== read functions =====
 
-asf::Measurement read_measurement(const std::filesystem::path path) {
-    const asf::Utf16leFile file{path};
-    const asf::SpeFile spe{file.Content(), path.string()};
+Measurement read_measurement(const std::filesystem::path path) {
+    const Utf16leFile file{path};
+    const SpeFile spe{file.Content(), path.string()};
     return spe.Read();
 }
 
@@ -264,6 +265,9 @@ int run(const int argc, const char* argv[]) {
     return EXIT_SUCCESS;
 }
 
+} // namespace cli
+} // namespace atomtex_spe_file
+
 int main(const int argc, const char* argv[]) {
-    return run(argc, argv);
+    return atomtex_spe_file::cli::run(argc, argv);
 }

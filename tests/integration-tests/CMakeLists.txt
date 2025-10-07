@@ -1,16 +1,17 @@
+find_package(Boost REQUIRED COMPONENTS program_options json)
 find_package(GTest REQUIRED)
 
 set(ATOMTEX_SPE_FILE_SRC_DIR ${PROJECT_SOURCE_DIR}/atomtex_spe_file/src)
 set(ATOMTEX_SPE_FILE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/atomtex_spe_file/include)
 
+set(ATOMTEX_SPE_FILE_CLI_SRC_DIR ${PROJECT_SOURCE_DIR}/atomtex_spe_file_cli)
+set(ATOMTEX_SPE_FILE_CLI_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/atomtex_spe_file_cli)
+
 add_custom_target(integration-tests)
 
 function(add_integration_test TEST_NAME)
     add_executable(${TEST_NAME} ${ARGN})
-    add_test(
-        NAME "integration-test.${TEST_NAME}"
-        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}
-    )
+    gtest_discover_tests(${TEST_NAME} TEST_PREFIX "integration-test.")
     target_include_directories(${TEST_NAME} PRIVATE
         ${ATOMTEX_SPE_FILE_INCLUDE_DIR}
     )
@@ -29,4 +30,19 @@ add_integration_test(spe_file_test
     spe_file_test.cpp
     ${ATOMTEX_SPE_FILE_SRC_DIR}/spe_file.cpp
     ${ATOMTEX_SPE_FILE_SRC_DIR}/measurement.cpp
+)
+
+add_integration_test(cli_test
+    cli_test.cpp
+    ${ATOMTEX_SPE_FILE_CLI_SRC_DIR}/run.cpp
+    ${ATOMTEX_SPE_FILE_SRC_DIR}/spe_file.cpp
+    ${ATOMTEX_SPE_FILE_SRC_DIR}/measurement.cpp
+    ${ATOMTEX_SPE_FILE_SRC_DIR}/utf16le_file.cpp
+)
+target_link_libraries(cli_test PRIVATE
+    Boost::program_options
+    Boost::json
+)
+target_include_directories(cli_test PRIVATE
+    ${ATOMTEX_SPE_FILE_CLI_INCLUDE_DIR}
 )

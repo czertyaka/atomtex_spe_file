@@ -4,7 +4,6 @@
 #include <map>
 #include <filesystem>
 #include <ostream>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -199,7 +198,7 @@ void print_measurements(std::ostream& os, std::string_view format, const Measure
 
 }
 
-int main(const int argc, const char* argv[]) {
+int run(const int argc, const char* argv[]) {
     CommandLineArgs args {argc, argv};
     const auto& vm = args.GetVariablesMap();
     if (vm.contains("help")) {
@@ -263,4 +262,8 @@ int main(const int argc, const char* argv[]) {
         print_measurements(std::cout, format, measurements);
     }
     return EXIT_SUCCESS;
+}
+
+int main(const int argc, const char* argv[]) {
+    return run(argc, argv);
 }
